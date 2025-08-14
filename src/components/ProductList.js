@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
   Container,
   Grid,
@@ -19,6 +18,31 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 
+// Mock data for demonstration
+const mockProducts = [
+  {
+    product_id: 1,
+    name: "Classic Mayonnaise",
+    price: "4.99",
+    description: "Our original creamy mayonnaise made with simple ingredients",
+    image_url: "https://via.placeholder.com/300x200?text=Classic+Mayo"
+  },
+  {
+    product_id: 2,
+    name: "Spicy Mayonnaise",
+    price: "5.49",
+    description: "Creamy mayonnaise with a kick of chili",
+    image_url: "https://via.placeholder.com/300x200?text=Spicy+Mayo"
+  },
+  {
+    product_id: 3,
+    name: "Garlic Aioli",
+    price: "5.99",
+    description: "Rich garlic-infused mayonnaise perfect for dipping",
+    image_url: "https://via.placeholder.com/300x200?text=Garlic+Aioli"
+  }
+];
+
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,21 +61,14 @@ const ProductList = () => {
   });
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get('http://localhost:8000/api/products/');
-      setProducts(response.data);
-    } catch (error) {
-      showSnackbar('Failed to fetch products', 'error');
-      console.error('Error fetching products:', error);
-    } finally {
+    // Simulate API call with timeout
+    const timer = setTimeout(() => {
+      setProducts(mockProducts);
       setLoading(false);
-    }
-  };
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleOpenDialog = (product = null) => {
     setCurrentProduct(product || {
@@ -76,22 +93,23 @@ const ProductList = () => {
     }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     try {
       if (currentProduct.product_id) {
-        await axios.put(
-          `http://localhost:8000/api/products/${currentProduct.product_id}/`,
-          currentProduct
-        );
+        // Update existing product
+        setProducts(prev => prev.map(p => 
+          p.product_id === currentProduct.product_id ? currentProduct : p
+        ));
         showSnackbar('Product updated successfully', 'success');
       } else {
-        await axios.post(
-          'http://localhost:8000/api/products/',
-          currentProduct
-        );
+        // Add new product
+        const newProduct = {
+          ...currentProduct,
+          product_id: Math.max(...products.map(p => p.product_id), 0) + 1
+        };
+        setProducts(prev => [...prev, newProduct]);
         showSnackbar('Product added successfully', 'success');
       }
-      fetchProducts();
       handleCloseDialog();
     } catch (error) {
       showSnackbar('Error saving product', 'error');
@@ -99,11 +117,10 @@ const ProductList = () => {
     }
   };
 
-  const handleDelete = async (productId) => {
+  const handleDelete = (productId) => {
     try {
-      await axios.delete(`http://localhost:8000/api/products/${productId}/`);
+      setProducts(prev => prev.filter(p => p.product_id !== productId));
       showSnackbar('Product deleted successfully', 'success');
-      fetchProducts();
     } catch (error) {
       showSnackbar('Error deleting product', 'error');
       console.error('Error deleting product:', error);
