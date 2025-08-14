@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile  
     container_name: front_end-container  
     ports:
-      - "8048:3003"  
+      - "8058:3003"  
     restart: always  
     networks:
       - app-network  
